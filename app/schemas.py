@@ -1,7 +1,7 @@
 """Pydantic schemas and validation rules for FitBuddy."""
 
 import math
-from typing import Optional
+from typing import Optional, Any, List, Dict, Union, Tuple
 from pydantic import (
     BaseModel,
     EmailStr,
