@@ -13,9 +13,14 @@ db_url = settings.database_url
 # Vercel / AWS Lambda Serverless Compatibility:
 # On Vercel, the local filesystem is read-only except for /tmp.
 # If database_url is the default relative SQLite URL, redirect it to /tmp so table creation succeeds.
-is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+is_serverless = bool(
+    os.environ.get("VERCEL")
+    or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+    or not os.access(".", os.W_OK)
+)
 if is_serverless and db_url.startswith("sqlite:///."):
     db_url = "sqlite:////tmp/fitbuddy.db"
+
 
 # Connect args: check_same_thread=False is required for SQLite with FastAPI multi-threading
 connect_args = {}
