@@ -23,8 +23,11 @@ async def lifespan(app: FastAPI):
     """Lifecycle hook for startup and shutdown operations."""
     settings = get_settings()
     # Initialize database tables non-destructively
-    init_db()
-    print(f"[{settings.app_name}] Database initialized. Server running in {settings.app_env} mode at http://{settings.host}:{settings.port}")
+    try:
+        init_db()
+        print(f"[{settings.app_name}] Database initialized. Server running in {settings.app_env} mode at http://{settings.host}:{settings.port}")
+    except Exception as e:
+        print(f"[{settings.app_name}] Database initialization error during startup: {e}")
     yield
     print(f"[{settings.app_name}] Shutting down gracefully.")
 
