@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Inspect Plan #{{ plan.id }} (v{{ plan.version }}) — Admin — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+
+  <!-- Breadcrumbs & Navigation -->
+  <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <a href="/admin" class="btn btn-sm btn-outline" id="btn-back-admin">
+      &larr; Admin Dashboard
+    </a>
+    {% if owner.id %}
+      <a href="/admin/users/{{ owner.id }}" class="btn btn-sm btn-outline" id="btn-back-user">
+        &larr; User #{{ owner.id }} ({{ owner.email }})
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Plan Overview Header -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+          <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: var(--accent-primary); border: 1px solid rgba(16, 185, 129, 0.3);">
+            Version {{ plan.version }}
+          </span>
+          <span class="badge" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25);">
+            {{ plan_schedule.goal.replace('_', ' ')|title if plan_schedule.goal else "Fitness Plan" }}
+          </span>
+          {% if plan.is_mock %}
+            <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35);" id="plan-mode-badge">
+              ⚙️ Mock Simulation Mode ({{ plan.model_identifier }})
+            </span>
+          {% else %}
+            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35);" id="plan-mode-badge">
+              ⚡ Live AI Generation ({{ plan.model_identifier }})
+            </span>
+          {% endif %}
+        </div>
+        <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;" id="plan-title">
+          {{ plan_schedule.plan_title or "Personalized 7-Day Workout Plan" }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 800px;">
+          {{ plan_schedule.summary or "Comprehensive structured seven-day fitness regimen." }}
+        </p>
+      </div>
+
+      <!-- Plan Metadata Card -->
+      <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); min-width: 240px;">
+        <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.5rem;">Plan Telemetry</div>
+        <div style="font-size: 0.85rem; margin-bottom: 0.35rem;">
+          <span style="color: var(--text-muted);">Owner:</span> 
+          <a href="/admin/users/{{ owner.id }}" style="color: var(--accent-primary); font-weight: 600;">{{ owner.email }}</a>
+        </div>
+        <div style="font-size: 0.85rem; margin-bottom: 0.35rem;">
+          <span style="color: var(--text-muted);">Plan ID:</span> <span style="font-family: monospace;">#{{ plan.id }}</span>
+        </div>
+        <div style="font-size: 0.85rem; margin-bottom: 0.35rem;">
+          <span style="color: var(--text-muted);">Model:</span> <span style="font-weight: 600;">{{ plan.model_identifier }}</span>
+        </div>
+        <div style="font-size: 0.85rem;">
+          <span style="color: var(--text-muted);">Generated:</span> {{ plan.created_at }}
+        </div>
+      </div>
+    </div>
+
+    {% if plan_schedule.general_guidance %}
+      <div style="margin-top: 1.5rem; padding: 1rem 1.25rem; background: rgba(16, 185, 129, 0.05); border-left: 3px solid var(--accent-primary); border-radius: 4px; font-size: 0.875rem;">
+        <strong style="color: var(--accent-primary);">General Guidance:</strong> {{ plan_schedule.general_guidance }}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Version Lineage & Feedback Audit Trail -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>🔄</span> Version Lineage &amp; Adaptation Feedback
+    </h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+      <!-- Lineage Info -->
+      <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-main);">Lineage Tree</h3>
+        <div style="font-size: 0.9rem; line-height: 1.8;">
+          <div>
+            <strong>Current Version:</strong> v{{ plan.version }} (Plan #{{ plan.id }})
+          </div>
+          <div>
+            <strong>Parent Version:</strong>
+            {% if plan.parent_plan_id %}
+              <a href="/admin/plans/{{ plan.parent_plan_id }}" style="color: var(--accent-primary); font-weight: 600;">
+                Plan #{{ plan.parent_plan_id }} &rarr;
+              </a>
+            {% else %}
+              <span style="color: var(--text-dim); font-style: italic;">None (Original Initial Plan)</span>
+            {% endif %}
+          </div>
+          <div>
+            <strong>Subsequent Revisions:</strong>
+            {% if revisions_derived %}
+              <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                {% for rev in revisions_derived %}
+                  <a href="/admin/plans/{{ rev.id }}" style="color: #38bdf8; font-size: 0.85rem;">
+                    &bull; v{{ rev.version }} (Plan #{{ rev.id }}): {{ rev.title }} ({{ rev.created_at }})
+                  </a>
+                {% endfor %}
+              </div>
+            {% else %}
+              <span style="color: var(--text-dim); font-style: italic;">None derived yet</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Triggering Feedback (if this plan is a revision) -->
+      <div style="background: var(--bg-secondary); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-main);">Triggering Feedback Note</h3>
+        {% if triggering_feedback %}
+          <div style="background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; padding: 0.75rem 1rem; border-radius: 4px; font-size: 0.875rem; margin-bottom: 0.5rem;">
+            "{{ triggering_feedback.feedback_text }}"
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-dim);">
+            Submitted from Parent Plan <a href="/admin/plans/{{ triggering_feedback.source_plan_id }}" style="color: #38bdf8;">#{{ triggering_feedback.source_plan_id }}</a> on {{ triggering_feedback.created_at }}
+          </div>
+        {% else %}
+          <p style="color: var(--text-dim); font-style: italic; font-size: 0.875rem;">
+            This plan was generated as a primary plan from the profile snapshot, not from revision feedback.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Feedbacks Received on this Plan -->
+    {% if feedbacks_received %}
+      <div style="margin-top: 1.5rem;">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-main);">User Feedback Submitted on this Version</h3>
+        <div style="overflow-x: auto;">
+          <table class="table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-dim);">
+                <th style="padding: 0.5rem 0.75rem;">Feedback ID</th>
+                <th style="padding: 0.5rem 0.75rem;">User Feedback Text</th>
+                <th style="padding: 0.5rem 0.75rem;">Resulting Plan</th>
+                <th style="padding: 0.5rem 0.75rem;">Submitted At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in feedbacks_received %}
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                  <td style="padding: 0.5rem 0.75rem; font-family: monospace; color: var(--text-dim);">#{{ f.id }}</td>
+                  <td style="padding: 0.5rem 0.75rem; color: var(--text-main); font-weight: 500;">"{{ f.feedback_text }}"</td>
+                  <td style="padding: 0.5rem 0.75rem;">
+                    {% if f.resulting_plan_id %}
+                      <a href="/admin/plans/{{ f.resulting_plan_id }}" style="color: var(--accent-primary); font-weight: 600;">
+                        Inspect Plan #{{ f.resulting_plan_id }} &rarr;
+                      </a>
+                    {% else %}
+                      <span style="color: var(--text-dim);">—</span>
+                    {% endif %}
+                  </td>
+                  <td style="padding: 0.5rem 0.75rem; color: var(--text-dim);">{{ f.created_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Profile Snapshot at Generation Time -->
+  {% if profile_snapshot %}
+    <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+      <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>📸</span> Fitness Profile Snapshot (At Plan Generation)
+      </h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; font-size: 0.85rem;">
+        <div style="background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="color: var(--text-dim); font-size: 0.75rem;">Age / Weight</div>
+          <div style="font-weight: 600; margin-top: 0.2rem;">{{ profile_snapshot.age }} yrs • {{ profile_snapshot.weight_kg }} kg</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="color: var(--text-dim); font-size: 0.75rem;">Goal</div>
+          <div style="font-weight: 600; color: var(--accent-primary); margin-top: 0.2rem;">{{ profile_snapshot.fitness_goal.replace('_', ' ')|title if profile_snapshot.fitness_goal else "—" }}</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="color: var(--text-dim); font-size: 0.75rem;">Intensity / Level</div>
+          <div style="font-weight: 600; margin-top: 0.2rem;">{{ profile_snapshot.workout_intensity|capitalize }} • {{ profile_snapshot.experience_level|capitalize }}</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="color: var(--text-dim); font-size: 0.75rem;">Equipment / Time</div>
+          <div style="font-weight: 600; margin-top: 0.2rem;">{{ profile_snapshot.equipment|capitalize }} • {{ profile_snapshot.available_minutes }} min</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); grid-column: span 2;">
+          <div style="color: var(--text-dim); font-size: 0.75rem;">Exercise Limitations</div>
+          <div style="font-weight: 500; color: var(--text-muted); margin-top: 0.2rem;">{{ profile_snapshot.exercise_limitations or "None reported" }}</div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Seven-Day Schedule Inspection -->
+  <div style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>📅</span> Structured 7-Day Workout Schedule
+    </h2>
+
+    {% if plan_schedule.days %}
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        {% for day in plan_schedule.days %}
+          <div class="card" id="admin-day-card-{{ day.day_number }}" style="padding: 1.75rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-primary); font-weight: 700; font-size: 0.85rem;">
+                  Day {{ day.day_number }}
+                </span>
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">
+                  {{ day.day_label }}: {{ day.focus }}
+                </h3>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <span class="badge" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8;">
+                  {{ day.activity_type|title }}
+                </span>
+                <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1;">
+                  ⏱️ {{ day.estimated_duration_minutes }} min
+                </span>
+              </div>
+            </div>
+
+            <!-- Warm-up -->
+            {% if day.warmup %}
+              <div style="margin-bottom: 1rem; padding: 0.6rem 0.85rem; background: var(--bg-secondary); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                <strong style="color: #fbbf24;">Warm-up:</strong> {{ day.warmup }}
+              </div>
+            {% endif %}
+
+            <!-- Exercises Table -->
+            {% if day.exercises %}
+              <div style="overflow-x: auto; margin-bottom: 1rem;">
+                <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-dim);">
+                      <th style="padding: 0.5rem 0.75rem;">Exercise</th>
+                      <th style="padding: 0.5rem 0.75rem;">Sets</th>
+                      <th style="padding: 0.5rem 0.75rem;">Reps / Duration</th>
+                      <th style="padding: 0.5rem 0.75rem;">Rest</th>
+                      <th style="padding: 0.5rem 0.75rem;">Instructions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for ex in day.exercises %}
+                      <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                        <td style="padding: 0.6rem 0.75rem; font-weight: 600; color: var(--text-main);">{{ ex.name }}</td>
+                        <td style="padding: 0.6rem 0.75rem; color: var(--text-muted);">{{ ex.sets if ex.sets is not none else "—" }}</td>
+                        <td style="padding: 0.6rem 0.75rem; color: var(--accent-primary); font-weight: 500;">{{ ex.repetitions_or_duration }}</td>
+                        <td style="padding: 0.6rem 0.75rem; color: var(--text-muted);">{{ ex.rest_interval or "—" }}</td>
+                        <td style="padding: 0.6rem 0.75rem; color: var(--text-dim); max-width: 400px;">{{ ex.instructions }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+
+            <!-- Cooldown & Recovery -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; font-size: 0.85rem;">
+              {% if day.cooldown %}
+                <div style="padding: 0.6rem 0.85rem; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                  <strong style="color: #38bdf8;">Cooldown:</strong> {{ day.cooldown }}
+                </div>
+              {% endif %}
+              {% if day.recovery_notes %}
+                <div style="padding: 0.6rem 0.85rem; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                  <strong style="color: #a855f7;">Recovery Notes:</strong> {{ day.recovery_notes }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--text-dim); font-style: italic;">No workout day data recorded in this plan.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

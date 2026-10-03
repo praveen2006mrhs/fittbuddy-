@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Daily Nutrition &amp; Recovery Tips — FitBuddy{% endblock %}
+
+{% block content %}
+<section class="tips-section" style="padding: 2.5rem 0 4rem;">
+  <div class="container" style="max-width: 960px;">
+    <!-- Page Header -->
+    <div style="margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+        <span class="badge-pill" style="font-size: 0.8rem;">Daily Wellness Guidance</span>
+      </div>
+      <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; letter-spacing: -0.02em;">
+        Nutrition &amp; Recovery Tips
+      </h1>
+      <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; max-width: 720px; margin: 0;">
+        Concise, practical, science-backed guidance calibrated to your saved fitness goal. Get actionable daily habits to complement your training.
+      </p>
+    </div>
+
+    <!-- General Wellness Notice -->
+    <div class="scope-notice-card" id="tips-wellness-notice" style="margin-bottom: 2rem;">
+      <div class="scope-icon">🌿</div>
+      <div class="scope-text">
+        <strong>General Wellness Guidance &amp; Scope Boundary</strong>
+        <p>FitBuddy tips provide general lifestyle and exercise physiology guidance. <em>They are not medical advice, restrictive calorie prescriptions, supplement dosing, or guaranteed numerical outcomes.</em> Always listen to your body and consult a healthcare professional for specific clinical dietary needs.</p>
+      </div>
+    </div>
+
+    {% if not has_profile %}
+      <!-- Missing Profile Alert -->
+      <div class="card" style="padding: 2.5rem; text-align: center; border-color: rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.03);" id="missing-profile-card">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
+        <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+          Complete Your Fitness Profile First
+        </h2>
+        <p style="color: var(--text-muted); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6; font-size: 0.95rem;">
+          To receive personalized nutrition and recovery tips, we need to know your primary fitness goal (e.g. Muscle Gain, Weight Loss, or General Wellness).
+        </p>
+        <a href="/profile" class="btn btn-primary" style="padding: 0.75rem 1.75rem; font-weight: 700;">
+          Set Up Fitness Profile →
+        </a>
+      </div>
+    {% else %}
+      <!-- Tip Request Card -->
+      <div class="card" style="padding: 2rem; margin-bottom: 2.5rem; position: relative; overflow: hidden;" id="tip-request-card">
+        <div style="position: absolute; top: -50px; right: -50px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.25rem;">
+              Request a New Daily Tip
+            </h2>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0;">
+              Choose between nutrition or recovery. We'll generate a tip calibrated for your goal.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-subtle); padding: 0.35rem 0.85rem; border-radius: var(--radius-full); font-size: 0.85rem;">
+            <span>🎯</span>
+            <span style="color: var(--text-muted);">Calibrated Goal:</span>
+            <strong style="color: var(--text-main);">{{ user_goal.replace('_', ' ').title() }}</strong>
+          </div>
+        </div>
+
+        <form action="/tips/generate" method="POST" id="tip-generation-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="category" id="selected-category-input" value="nutrition">
+
+          <div style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.6rem;">
+              Select Guidance Category:
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;" id="category-selector-group">
+              <!-- Nutrition Button -->
+              <button
+                type="button"
+                class="category-btn active"
+                id="btn-category-nutrition"
+                data-category="nutrition"
+                style="display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--accent-primary); background: rgba(16, 185, 129, 0.12); color: var(--text-main); cursor: pointer; text-align: left; transition: var(--transition-fast);"
+              >
+                <span style="font-size: 1.6rem;">🥗</span>
+                <div>
+                  <div style="font-weight: 700; color: #34d399; font-size: 0.95rem;">Nutrition &amp; Fueling</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">Nutrient timing, hydration &amp; food quality</div>
+                </div>
+              </button>
+
+              <!-- Recovery Button -->
+              <button
+                type="button"
+                class="category-btn"
+                id="btn-category-recovery"
+                data-category="recovery"
+                style="display: flex; align-items: center; gap: 0.85rem; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: rgba(255, 255, 255, 0.03); color: var(--text-main); cursor: pointer; text-align: left; transition: var(--transition-fast);"
+              >
+                <span style="font-size: 1.6rem;">🧘</span>
+                <div>
+                  <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">Rest &amp; Regeneration</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);">Sleep quality, parasympathetic recovery &amp; mobility</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <button
+              type="submit"
+              id="submit-tip-btn"
+              class="btn btn-primary"
+              style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; padding: 0.75rem 1.75rem;"
+            >
+              <span id="btn-tip-text">⚡ Get Daily Tip</span>
+              <span id="btn-tip-spinner" style="display: none;">⏳ Generating Tip...</span>
+            </button>
+            <span style="font-size: 0.775rem; color: var(--text-dim);">
+              Rate-limited for single-process local safety (3s cooldown).
+            </span>
+          </div>
+        </form>
+      </div>
+
+      <!-- Latest Saved Tip Card -->
+      <div style="margin-bottom: 3rem;" id="latest-tip-container">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+          <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <span>✨</span> Latest Saved Tip
+          </h2>
+          {% if latest_tip %}
+            <span style="font-size: 0.8rem; color: var(--text-dim);">
+              Generated {{ latest_tip.created_at.strftime('%B %d, %Y • %H:%M UTC') if latest_tip.created_at else 'Recently' }}
+            </span>
+          {% endif %}
+        </div>
+
+        {% if latest_tip %}
+          <div class="card" style="padding: 2rem; border-color: rgba(16, 185, 129, 0.35); position: relative;" id="latest-tip-card">
+            <!-- Badges Bar -->
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                {% if latest_tip.category == 'nutrition' %}
+                  <span style="font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); padding: 0.2rem 0.65rem; border-radius: var(--radius-full); font-weight: 700;">
+                    🥗 Nutrition
+                  </span>
+                {% else %}
+                  <span style="font-size: 0.8rem; background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.35); padding: 0.2rem 0.65rem; border-radius: var(--radius-full); font-weight: 700;">
+                    🧘 Recovery
+                  </span>
+                {% endif %}
+                <span style="font-size: 0.8rem; background: rgba(255, 255, 255, 0.06); color: var(--text-muted); padding: 0.2rem 0.65rem; border-radius: var(--radius-full);">
+                  🎯 {{ latest_tip.goal.replace('_', ' ').title() }}
+                </span>
+              </div>
+
+              <div>
+                {% if latest_tip.is_mock %}
+                  <span style="font-size: 0.75rem; background: rgba(234, 179, 8, 0.12); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); padding: 0.15rem 0.55rem; border-radius: var(--radius-full); font-weight: 600;">
+                    [Mock Simulation]
+                  </span>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--text-dim); background: rgba(255, 255, 255, 0.05); padding: 0.15rem 0.55rem; border-radius: var(--radius-full);">
+                    {{ latest_tip.model_identifier }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Title -->
+            <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.25rem; letter-spacing: -0.01em;">
+              {{ latest_tip.short_title }}
+            </h3>
+
+            <!-- Practical Tip Box -->
+            <div style="background: rgba(16, 185, 129, 0.06); border-left: 4px solid var(--accent-primary); border-radius: var(--radius-sm); padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;" id="latest-practical-tip-box">
+              <div style="font-size: 0.775rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #34d399; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span>💡</span> Practical Action Tip
+              </div>
+              <div style="font-size: 1.05rem; color: var(--text-main); font-weight: 600; line-height: 1.55;">
+                {{ latest_tip.practical_tip }}
+              </div>
+            </div>
+
+            <!-- Brief Explanation Box -->
+            <div style="background: rgba(6, 182, 212, 0.05); border-left: 4px solid var(--accent-secondary); border-radius: var(--radius-sm); padding: 1.1rem 1.25rem; margin-bottom: 1rem;" id="latest-explanation-box">
+              <div style="font-size: 0.775rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #38bdf8; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span>🔬</span> Physiology &amp; Rationale
+              </div>
+              <div style="font-size: 0.925rem; color: var(--text-muted); line-height: 1.6;">
+                {{ latest_tip.brief_explanation }}
+              </div>
+            </div>
+
+            {% if latest_tip.cautions and latest_tip.cautions|length > 0 %}
+              <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.75rem; border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+                ⚠️ <strong>Precaution:</strong> {{ latest_tip.cautions | join(' • ') }}
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <!-- Empty State -->
+          <div class="card" style="padding: 2.5rem; text-align: center;" id="tips-empty-card">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💡</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">
+              No Tips Saved Yet
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; max-width: 460px; margin: 0 auto;">
+              Select Nutrition or Recovery above and click "Get Daily Tip" to generate your first personalized wellness recommendation!
+            </p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Small History of Previous Tips -->
+      {% if history_tips and history_tips|length > 0 %}
+        <div id="tips-history-section">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>📜</span> Previous Tips History
+            </h2>
+            <span class="badge-pill" style="font-size: 0.8rem;">
+              {{ history_tips|length }} Previous Tip{{ 's' if history_tips|length != 1 else '' }}
+            </span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 1rem;" id="tips-history-list">
+            {% for item in history_tips %}
+              <div class="card" style="padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.02);" id="history-tip-item-{{ item.id }}">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    {% if item.category == 'nutrition' %}
+                      <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-weight: 600;">
+                        🥗 Nutrition
+                      </span>
+                    {% else %}
+                      <span style="font-size: 0.75rem; background: rgba(6, 182, 212, 0.15); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-weight: 600;">
+                        🧘 Recovery
+                      </span>
+                    {% endif %}
+                    <span style="font-size: 0.75rem; color: var(--text-dim);">
+                      {{ item.created_at.strftime('%B %d, %Y') if item.created_at else 'Saved' }}
+                    </span>
+                  </div>
+
+                  <div>
+                    {% if item.is_mock %}
+                      <span style="font-size: 0.7rem; color: #facc15;">[Mock]</span>
+                    {% else %}
+                      <span style="font-size: 0.7rem; color: var(--text-dim);">{{ item.model_identifier }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.4rem;">
+                  {{ item.short_title }}
+                </h4>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0; line-height: 1.5;">
+                  {{ item.practical_tip }}
+                </p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+
+<!-- Interactive Category Toggle & Double-Submit Protection Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnNutrition = document.getElementById('btn-category-nutrition');
+    const btnRecovery = document.getElementById('btn-category-recovery');
+    const categoryInput = document.getElementById('selected-category-input');
+
+    function selectCategory(cat) {
+      if (!categoryInput) return;
+      categoryInput.value = cat;
+
+      if (cat === 'nutrition') {
+        if (btnNutrition) {
+          btnNutrition.style.borderColor = 'var(--accent-primary)';
+          btnNutrition.style.background = 'rgba(16, 185, 129, 0.14)';
+          btnNutrition.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.28)';
+          btnNutrition.querySelector('div div').style.color = '#34d399';
+        }
+        if (btnRecovery) {
+          btnRecovery.style.borderColor = 'var(--border-subtle)';
+          btnRecovery.style.background = 'rgba(255, 255, 255, 0.03)';
+          btnRecovery.style.boxShadow = 'none';
+          btnRecovery.querySelector('div div').style.color = 'var(--text-main)';
+        }
+      } else {
+        if (btnRecovery) {
+          btnRecovery.style.borderColor = 'var(--accent-secondary)';
+          btnRecovery.style.background = 'rgba(6, 182, 212, 0.14)';
+          btnRecovery.style.boxShadow = '0 0 25px rgba(6, 182, 212, 0.28)';
+          btnRecovery.querySelector('div div').style.color = '#38bdf8';
+        }
+        if (btnNutrition) {
+          btnNutrition.style.borderColor = 'var(--border-subtle)';
+          btnNutrition.style.background = 'rgba(255, 255, 255, 0.03)';
+          btnNutrition.style.boxShadow = 'none';
+          btnNutrition.querySelector('div div').style.color = 'var(--text-main)';
+        }
+      }
+    }
+
+    if (btnNutrition) {
+      btnNutrition.addEventListener('click', function() { selectCategory('nutrition'); });
+    }
+    if (btnRecovery) {
+      btnRecovery.addEventListener('click', function() { selectCategory('recovery'); });
+    }
+
+    // Submit debounce & loading state
+    const tipForm = document.getElementById('tip-generation-form');
+    const submitBtn = document.getElementById('submit-tip-btn');
+    const btnText = document.getElementById('btn-tip-text');
+    const btnSpinner = document.getElementById('btn-tip-spinner');
+
+    if (tipForm && submitBtn) {
+      tipForm.addEventListener('submit', function(e) {
+        if (submitBtn.disabled) {
+          e.preventDefault();
+          return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.75';
+        submitBtn.style.cursor = 'not-allowed';
+        if (btnText && btnSpinner) {
+          btnText.style.display = 'none';
+          btnSpinner.style.display = 'inline';
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

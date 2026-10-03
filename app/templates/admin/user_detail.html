@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}User #{{ target_user.id }} — Admin Inspection — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+
+  <!-- Breadcrumbs & Back Link -->
+  <div style="margin-bottom: 1.5rem;">
+    <a href="/admin" class="btn btn-sm btn-outline" id="btn-back-admin" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+      &larr; Back to Admin Dashboard
+    </a>
+  </div>
+
+  <!-- User Account Banner -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+          <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2);">
+            User ID #{{ target_user.id }}
+          </span>
+          {% if target_user.role == 'admin' %}
+            <span class="badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
+              Administrator
+            </span>
+          {% else %}
+            <span class="badge" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25);">
+              Standard User
+            </span>
+          {% endif %}
+        </div>
+        <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.25rem;">
+          {{ target_user.email }}
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">
+          Account registered on <strong>{{ target_user.created_at }}</strong>
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="text-align: right;">
+          <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em;">Saved Plans</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-primary);" id="user-plans-count">{{ plans|length }}</div>
+        </div>
+        <div style="text-align: right; border-left: 1px solid var(--border-subtle); padding-left: 1rem;">
+          <div style="font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em;">Generated Tips</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: #fbbf24;" id="user-tips-count">{{ tips|length }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fitness Profile Section -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>👤</span> Fitness Profile Parameters
+    </h2>
+
+    {% if profile %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Display Name</div>
+          <div style="font-weight: 600; color: var(--text-main); margin-top: 0.25rem;" id="profile-display-name">{{ profile.display_name }}</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Age &amp; Weight</div>
+          <div style="font-weight: 600; color: var(--text-main); margin-top: 0.25rem;" id="profile-age-weight">{{ profile.age }} yrs • {{ profile.weight_kg }} kg</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Fitness Goal</div>
+          <div style="font-weight: 600; color: var(--accent-primary); margin-top: 0.25rem;" id="profile-goal">{{ profile.fitness_goal.replace('_', ' ')|title }}</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Intensity &amp; Experience</div>
+          <div style="font-weight: 600; color: var(--text-main); margin-top: 0.25rem;" id="profile-intensity">{{ profile.workout_intensity|capitalize }} • {{ profile.experience_level|capitalize }}</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Equipment &amp; Duration</div>
+          <div style="font-weight: 600; color: var(--text-main); margin-top: 0.25rem;" id="profile-equipment">{{ profile.equipment|capitalize }} • {{ profile.available_minutes }} min</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Exercise Limitations</div>
+          <div style="font-weight: 500; color: var(--text-muted); margin-top: 0.25rem; font-size: 0.85rem;" id="profile-limitations">{{ profile.exercise_limitations }}</div>
+        </div>
+      </div>
+      <div style="margin-top: 1rem; color: var(--text-dim); font-size: 0.8rem; text-align: right;">
+        Profile snapshot last updated: {{ profile.updated_at }}
+      </div>
+    {% else %}
+      <div style="background: var(--bg-secondary); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); text-align: center; color: var(--text-muted);">
+        No fitness profile has been configured for this account yet.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Saved Workout Plans History -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2rem;">
+    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>📋</span> Saved Workout Plan History
+    </h2>
+
+    {% if plans %}
+      <div style="overflow-x: auto;">
+        <table class="table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;" id="admin-user-plans-table">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+              <th style="padding: 0.75rem 1rem;">Plan ID</th>
+              <th style="padding: 0.75rem 1rem;">Version</th>
+              <th style="padding: 0.75rem 1rem;">Plan Title</th>
+              <th style="padding: 0.75rem 1rem;">Goal</th>
+              <th style="padding: 0.75rem 1rem;">Model / Generation Mode</th>
+              <th style="padding: 0.75rem 1rem;">Revisions</th>
+              <th style="padding: 0.75rem 1rem;">Created At</th>
+              <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in plans %}
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-family: monospace;">#{{ p.id }}</td>
+                <td style="padding: 0.85rem 1rem;">
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-primary); border: 1px solid rgba(16, 185, 129, 0.25);">
+                    v{{ p.version }}
+                  </span>
+                  {% if p.parent_plan_id %}
+                    <span style="font-size: 0.75rem; color: var(--text-dim); margin-left: 0.25rem;">(from #{{ p.parent_plan_id }})</span>
+                  {% endif %}
+                </td>
+                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-main);">{{ p.title }}</td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-muted);">{{ p.goal.replace('_', ' ')|title }}</td>
+                <td style="padding: 0.85rem 1rem;">
+                  {% if p.is_mock %}
+                    <span class="badge" style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">
+                      ⚙️ Mock Simulation ({{ p.model_identifier }})
+                    </span>
+                  {% else %}
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                      ⚡ Live AI ({{ p.model_identifier }})
+                    </span>
+                  {% endif %}
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-muted);">
+                  {{ p.revisions_count }} child revision(s)
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-size: 0.8rem;">{{ p.created_at }}</td>
+                <td style="padding: 0.85rem 1rem; text-align: right;">
+                  <a href="/admin/plans/{{ p.id }}" class="btn btn-sm btn-outline" id="btn-inspect-user-plan-{{ p.id }}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                    Inspect Plan &rarr;
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-dim); font-style: italic; text-align: center; padding: 2rem 0;">
+        No workout plans have been generated by this user.
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Generated Tips History -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);">
+    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span>💡</span> Generated Nutrition &amp; Recovery Tips
+    </h2>
+
+    {% if tips %}
+      <div style="overflow-x: auto;">
+        <table class="table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;" id="admin-user-tips-table">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+              <th style="padding: 0.75rem 1rem;">ID</th>
+              <th style="padding: 0.75rem 1rem;">Category</th>
+              <th style="padding: 0.75rem 1rem;">Goal</th>
+              <th style="padding: 0.75rem 1rem;">Tip Title</th>
+              <th style="padding: 0.75rem 1rem;">Model / Generation Mode</th>
+              <th style="padding: 0.75rem 1rem;">Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tips %}
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-family: monospace;">#{{ t.id }}</td>
+                <td style="padding: 0.85rem 1rem;">
+                  {% if t.category == 'nutrition' %}
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">🥗 Nutrition</span>
+                  {% else %}
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25);">🛌 Recovery</span>
+                  {% endif %}
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-muted);">{{ t.goal.replace('_', ' ')|title }}</td>
+                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-main);">
+                  <div>{{ t.title }}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-dim); font-weight: 400; margin-top: 0.2rem;">{{ t.practical_tip[:90] }}...</div>
+                </td>
+                <td style="padding: 0.85rem 1rem;">
+                  {% if t.is_mock %}
+                    <span class="badge" style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">
+                      ⚙️ Mock ({{ t.model_identifier }})
+                    </span>
+                  {% else %}
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                      ⚡ Live AI ({{ t.model_identifier }})
+                    </span>
+                  {% endif %}
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-size: 0.8rem;">{{ t.created_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-dim); font-style: italic; text-align: center; padding: 2rem 0;">
+        No fitness tips have been requested by this user.
+      </p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

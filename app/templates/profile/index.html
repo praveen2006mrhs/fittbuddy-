@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}My Fitness Profile — FitBuddy{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+  <div class="container" style="max-width: 860px;">
+    <!-- Profile Page Header -->
+    <div class="profile-header">
+      <div class="badge-pill">⚙️ Account Settings</div>
+      <h1 class="page-title">Personal Fitness Profile</h1>
+      <p class="page-subtitle">Configure your physical metrics, training preferences, and equipment so Gemini can craft your personalized 7-day routine.</p>
+    </div>
+
+    <!-- MVP Scope Notice -->
+    <div class="scope-notice-card" id="profile-scope-notice">
+      <div class="scope-icon">📋</div>
+      <div class="scope-text">
+        <strong>Adult MVP Scope (Ages 18+)</strong>
+        <p>FitBuddy is currently calibrated strictly for adults aged 18 and older. Exercise prescriptions, cardiovascular estimates, and intensity loads are not designed for minors.</p>
+      </div>
+    </div>
+
+    <!-- AI Privacy & Data Minimization Notice -->
+    <div class="scope-notice-card" id="profile-ai-privacy-notice" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);">
+      <div class="scope-icon" style="color: #34d399;">🔒</div>
+      <div class="scope-text">
+        <strong style="color: #34d399;">AI Privacy &amp; Data Minimization</strong>
+        <p>When generating routines or tips, FitBuddy transmits <strong>only your physical fitness parameters</strong> (age, weight, goal, intensity, experience, equipment, duration, and exercise limitations) and revision feedback to Google Gemini. Your display name, email, password, and database account identifiers are <strong>strictly never sent</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Profile Form -->
+    <div class="form-card" id="profile-form-card">
+      <form action="/profile" method="POST" id="fitness-profile-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <div class="form-grid-2">
+          <!-- Display Name -->
+          <div class="form-group">
+            <label for="display_name" class="form-label">Display Name *</label>
+            <input 
+              type="text" 
+              id="display_name" 
+              name="display_name" 
+              class="form-control" 
+              placeholder="e.g. Alex"
+              value="{{ form_data.display_name if form_data.display_name is defined else (profile.display_name if profile else '') }}"
+              minlength="2"
+              maxlength="60"
+              required
+            >
+            <small class="form-hint">2 to 60 characters.</small>
+          </div>
+
+          <!-- Age -->
+          <div class="form-group">
+            <label for="age" class="form-label">Age (Years) *</label>
+            <input 
+              type="number" 
+              id="age" 
+              name="age" 
+              class="form-control" 
+              placeholder="e.g. 24"
+              value="{{ form_data.age if form_data.age is defined else (profile.age if profile else '') }}"
+              min="18"
+              max="120"
+              required
+            >
+            <small class="form-hint">Must be 18 or older (18 - 120).</small>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Weight in KG -->
+          <div class="form-group">
+            <label for="weight_kg" class="form-label">Weight (Kilograms) *</label>
+            <input 
+              type="number" 
+              step="0.1" 
+              id="weight_kg" 
+              name="weight_kg" 
+              class="form-control" 
+              placeholder="e.g. 72.5"
+              value="{{ form_data.weight_kg if form_data.weight_kg is defined else (profile.weight_kg if profile else '') }}"
+              min="20"
+              max="350"
+              required
+            >
+            <small class="form-hint">Finite positive number (20.0 to 350.0 kg).</small>
+          </div>
+
+          <!-- Available Minutes per Session -->
+          <div class="form-group">
+            <label for="available_minutes" class="form-label">Available Minutes / Session *</label>
+            <input 
+              type="number" 
+              id="available_minutes" 
+              name="available_minutes" 
+              class="form-control" 
+              placeholder="e.g. 45"
+              value="{{ form_data.available_minutes if form_data.available_minutes is defined else (profile.available_minutes if profile else '45') }}"
+              min="10"
+              max="180"
+              required
+            >
+            <small class="form-hint">Target session duration (10 - 180 mins).</small>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Fitness Goal -->
+          <div class="form-group">
+            <label for="fitness_goal" class="form-label">Primary Fitness Goal *</label>
+            {% set current_goal = form_data.fitness_goal if form_data.fitness_goal is defined else (profile.fitness_goal if profile else 'muscle_gain') %}
+            <select id="fitness_goal" name="fitness_goal" class="form-control form-select" required>
+              <option value="weight_loss" {% if current_goal == 'weight_loss' %}selected{% endif %}>Weight Loss &amp; Fat Burn</option>
+              <option value="muscle_gain" {% if current_goal == 'muscle_gain' %}selected{% endif %}>Muscle Gain &amp; Hypertrophy</option>
+              <option value="general_wellness" {% if current_goal == 'general_wellness' %}selected{% endif %}>General Wellness &amp; Mobility</option>
+            </select>
+          </div>
+
+          <!-- Workout Intensity -->
+          <div class="form-group">
+            <label for="workout_intensity" class="form-label">Workout Intensity *</label>
+            {% set current_intensity = form_data.workout_intensity if form_data.workout_intensity is defined else (profile.workout_intensity if profile else 'medium') %}
+            <select id="workout_intensity" name="workout_intensity" class="form-control form-select" required>
+              <option value="low" {% if current_intensity == 'low' %}selected{% endif %}>Low (Gentle, low-impact pace)</option>
+              <option value="medium" {% if current_intensity == 'medium' %}selected{% endif %}>Medium (Balanced, steady aerobic/strength)</option>
+              <option value="high" {% if current_intensity == 'high' %}selected{% endif %}>High (Challenging, athletic push)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Experience Level -->
+          <div class="form-group">
+            <label for="experience_level" class="form-label">Experience Level *</label>
+            {% set current_level = form_data.experience_level if form_data.experience_level is defined else (profile.experience_level if profile else 'beginner') %}
+            <select id="experience_level" name="experience_level" class="form-control form-select" required>
+              <option value="beginner" {% if current_level == 'beginner' %}selected{% endif %}>Beginner (0 - 6 months experience)</option>
+              <option value="intermediate" {% if current_level == 'intermediate' %}selected{% endif %}>Intermediate (6 months - 2 years)</option>
+              <option value="advanced" {% if current_level == 'advanced' %}selected{% endif %}>Advanced (2+ years consistent lifting)</option>
+            </select>
+          </div>
+
+          <!-- Equipment Access -->
+          <div class="form-group">
+            <label for="equipment" class="form-label">Available Equipment *</label>
+            {% set current_eq = form_data.equipment if form_data.equipment is defined else (profile.equipment if profile else 'dumbbells') %}
+            <select id="equipment" name="equipment" class="form-control form-select" required>
+              <option value="bodyweight" {% if current_eq == 'bodyweight' %}selected{% endif %}>Bodyweight Only (No equipment needed)</option>
+              <option value="dumbbells" {% if current_eq == 'dumbbells' %}selected{% endif %}>Dumbbells &amp; Resistance Bands</option>
+              <option value="full_gym" {% if current_eq == 'full_gym' %}selected{% endif %}>Full Gym (Barbells, cables &amp; machines)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Optional Limitations -->
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label for="exercise_limitations" class="form-label">Exercise Limitations / Medical Notes (Optional)</label>
+          <textarea 
+            id="exercise_limitations" 
+            name="exercise_limitations" 
+            class="form-control" 
+            rows="3" 
+            maxlength="500" 
+            placeholder="e.g. Tendonitis in right wrist, avoid heavy pushups; lower back tightness..."
+          >{{ form_data.exercise_limitations if form_data.exercise_limitations is defined else (profile.exercise_limitations if profile and profile.exercise_limitations else '') }}</textarea>
+          <small class="form-hint">Max 500 characters. These restrictions will be passed directly into Gemini's safety guidelines.</small>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions" style="margin-top: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <button type="submit" class="btn btn-primary" id="btn-save-profile">
+            Save Fitness Profile →
+          </button>
+          {% if profile %}
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <span class="save-status-text">✓ Profile is on file</span>
+              <a href="/plans" class="btn btn-outline" id="btn-goto-plans" style="font-size: 0.85rem;">
+                ⚡ Workout Plans →
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+
+    <!-- Danger Zone / Account Deletion -->
+    <div class="danger-zone-card" id="danger-zone">
+      <div class="danger-header">
+        <h2 class="danger-title">Danger Zone: Account Deletion</h2>
+        <p class="danger-desc">Permanently remove your account, profile, all workout plans, and stored session data from this local database.</p>
+      </div>
+      <a href="/profile/delete" class="btn btn-danger" id="btn-goto-delete">
+        Delete Account &amp; Dependent Data...
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

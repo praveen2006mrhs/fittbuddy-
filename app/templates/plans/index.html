@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}My Workout Plans — FitBuddy{% endblock %}
+
+{% block content %}
+<section class="plans-section" style="padding: 2.5rem 0 4rem;">
+  <div class="container" style="max-width: 960px;">
+    <!-- Page Header -->
+    <div class="profile-header" style="margin-bottom: 2rem;">
+      <div class="badge-pill">⚡ 7-Day AI Generator</div>
+      <h1 class="page-title">Personalized Workout Plans</h1>
+      <p class="page-subtitle">Evidence-based routines calibrated to your experience, equipment, and recovery needs.</p>
+    </div>
+
+    <!-- Medical & Scope Notice Banner -->
+    <div class="scope-notice-card" id="plans-medical-notice" style="margin-bottom: 2rem;">
+      <div class="scope-icon">🩺</div>
+      <div class="scope-text">
+        <strong>Important Safety Notice &amp; Medical Disclaimer</strong>
+        <p>FitBuddy automated validation verifies schema formatting, equipment constraints, and session duration limits. <em>Schema validation does not establish or guarantee medical safety.</em> Always consult a physician or healthcare provider before beginning any demanding physical exercise routine.</p>
+      </div>
+    </div>
+
+    <!-- Generation Control Card -->
+    <div class="form-card" style="margin-bottom: 2.5rem;" id="generator-card">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Generate New 7-Day Routine</h2>
+          <p style="font-size: 0.875rem; color: var(--text-muted);">Uses your saved profile parameters to synthesize a balanced weekly schedule with built-in recovery.</p>
+        </div>
+        {% if has_profile %}
+          <form action="/plans/generate" method="POST" id="generate-plan-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-primary" id="btn-generate-plan">
+              <span>⚡ Generate 7-Day Plan</span>
+            </button>
+          </form>
+        {% else %}
+          <a href="/profile" class="btn btn-primary" id="btn-setup-profile">
+            Complete Profile First →
+          </a>
+        {% endif %}
+      </div>
+
+      {% if profile %}
+        <!-- Active Profile Metrics Preview -->
+        <div style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1rem 1.25rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 0.5rem;">
+            Current Profile Blueprint
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; font-size: 0.85rem;">
+            <div><span style="color: var(--text-muted);">Goal:</span> <strong style="color: var(--text-main);">{{ profile.fitness_goal.replace('_', ' ').title() }}</strong></div>
+            <div><span style="color: var(--text-muted);">Intensity:</span> <strong style="color: var(--text-main);">{{ profile.workout_intensity.title() }}</strong></div>
+            <div><span style="color: var(--text-muted);">Experience:</span> <strong style="color: var(--text-main);">{{ profile.experience_level.title() }}</strong></div>
+            <div><span style="color: var(--text-muted);">Equipment:</span> <strong style="color: var(--text-main);">{{ profile.equipment.replace('_', ' ').title() }}</strong></div>
+            <div><span style="color: var(--text-muted);">Duration:</span> <strong style="color: var(--text-main);">{{ profile.available_minutes }} mins/day</strong></div>
+          </div>
+          {% if profile.exercise_limitations %}
+            <div style="margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-subtle); font-size: 0.8rem; color: var(--text-muted);">
+              <strong>Reported Limitations:</strong> {{ profile.exercise_limitations }}
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="alert alert-error" style="margin-bottom: 0;">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-content">
+            <p>You have not configured your fitness profile yet. Please set your age, weight, goal, and equipment to enable personalized workout generation.</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Plans List Section -->
+    <div class="section-header" style="text-align: left; margin-bottom: 1.5rem;">
+      <h2 class="section-title" style="font-size: 1.4rem;">Your Generated Plans History</h2>
+      <p class="section-desc">All generated 7-day plans are permanently saved and accessible only to your account.</p>
+    </div>
+
+    {% if plans and plans|length > 0 %}
+      <div class="plans-list" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        {% for p in plans %}
+          <div class="card plan-card" id="plan-card-{{ p.id }}" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
+                  <span class="badge-pill" style="font-size: 0.75rem; padding: 0.15rem 0.6rem;">v{{ p.version }}</span>
+                  <span style="font-size: 0.8rem; color: var(--text-dim);">
+                    {{ p.created_at.strftime('%B %d, %Y at %H:%M UTC') if p.created_at else '' }}
+                  </span>
+                  <span style="font-size: 0.75rem; color: var(--text-dim); background: rgba(255,255,255,0.05); padding: 0.1rem 0.5rem; border-radius: var(--radius-full);">
+                    {{ p.model_identifier }}
+                  </span>
+                </div>
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">
+                  {{ p.plan_title }}
+                </h3>
+              </div>
+              <a href="/plans/{{ p.id }}" class="btn btn-outline" id="btn-view-plan-{{ p.id }}">
+                View 7-Day Plan →
+              </a>
+            </div>
+
+            {% if p.summary %}
+              <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                {{ p.summary }}
+              </p>
+            {% endif %}
+
+            <div style="display: flex; align-items: center; gap: 1.5rem; font-size: 0.825rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+              <div>📅 <strong>7 Days Structured</strong></div>
+              <div>🎯 <strong>Goal:</strong> {{ p.goal.replace('_', ' ').title() if p.goal else 'Custom' }}</div>
+              {% if p.profile_snapshot and p.profile_snapshot.equipment %}
+                <div>🏋️ <strong>Equipment:</strong> {{ p.profile_snapshot.equipment.replace('_', ' ').title() }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty State -->
+      <div class="card" style="text-align: center; padding: 3rem 1.5rem; border-style: dashed;" id="empty-plans-card">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
+        <h3 style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 0.5rem;">No Workout Plans Generated Yet</h3>
+        <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem; font-size: 0.9rem;">
+          Click the "Generate 7-Day Plan" button above to have Google Gemini engineer your personalized weekly routine based on your fitness profile.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Prevent accidental double clicks and show loading state
+  const planForm = document.getElementById("generate-plan-form");
+  if (planForm) {
+    planForm.addEventListener("submit", function(e) {
+      const btn = document.getElementById("btn-generate-plan");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = "<span>⏳ Generating 7-Day Plan with Gemini...</span>";
+        btn.style.opacity = "0.75";
+        btn.style.cursor = "wait";
+      }
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Log In — FitBuddy{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card" id="login-card">
+    <div class="auth-header">
+      <div class="brand-icon" style="margin: 0 auto 1rem;">⚡</div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Log in to view your workouts, adapt your plans, and access your profile.</p>
+    </div>
+
+    <form action="/login" method="POST" class="auth-form" id="login-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-control" 
+          placeholder="your.email@example.com" 
+          value="{{ email_value or '' }}" 
+          required 
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-control" 
+          placeholder="Your password" 
+          required 
+          autocomplete="current-password"
+        >
+      </div>
+
+      <div class="form-actions" style="margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary btn-block" id="btn-submit-login">
+          Sign In to FitBuddy →
+        </button>
+      </div>
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account yet? <a href="/register" class="link-highlight">Register Here</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

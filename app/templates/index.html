@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}FitBuddy — AI-Powered 7-Day Workout & Fitness Companion{% endblock %}
+
+{% block content %}
+<section class="hero-section" id="hero-section">
+  <div class="container">
+    <div class="hero-pill" id="hero-badge">
+      <span>⚡ AI-Powered Fitness &amp; Wellness Companion</span>
+    </div>
+    
+    <h1 class="hero-title" id="main-heading">
+      Personalized Workout Plans<br>
+      <span class="gradient-text">Tailored for Your Fitness Journey</span>
+    </h1>
+
+    <p class="hero-subtitle" id="hero-description">
+      FitBuddy crafts intelligent, adaptive 7-day fitness routines tailored to your specific physical profile, equipment access, and workout goals—complete with progress feedback and recovery advice.
+    </p>
+
+    <div class="hero-actions" id="hero-cta-actions">
+      {% if user %}
+        <a href="/plans" class="btn btn-primary" id="btn-hero-plans">
+          <span>Go to Workout Plans</span>
+          <span>→</span>
+        </a>
+      {% else %}
+        <a href="/register" class="btn btn-primary" id="btn-hero-register">
+          <span>Get Started Free</span>
+          <span>→</span>
+        </a>
+      {% endif %}
+      <a href="/health" class="btn btn-outline" id="btn-health-check" target="_blank">
+        <span>Check GET /health</span>
+        <span>→</span>
+      </a>
+      <a href="#features" class="btn btn-outline" id="btn-explore-features">
+        <span>Explore Architecture</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Core Features Overview -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">FitBuddy Architecture &amp; Capabilities</h2>
+      <p class="section-desc">Designed as a clean, single-app FastAPI solution with zero bloated frameworks.</p>
+    </div>
+
+    <div class="grid-3">
+      <article class="card card-emerald" id="card-feature-plans">
+        <div class="card-icon">📋</div>
+        <h3>7-Day Workout Generation</h3>
+        <p>Generates structured daily routines with sets, reps, warm-ups, and cool-downs powered by the official <code>google-genai</code> SDK.</p>
+      </article>
+
+      <article class="card card-cyan" id="card-feature-feedback">
+        <div class="card-icon">🔄</div>
+        <h3>Feedback &amp; Revision Loop</h3>
+        <p>Allows users to review, critique, or request adjustments (e.g. sore shoulder, shorter sessions) to generate revised iterations.</p>
+      </article>
+
+      <article class="card card-violet" id="card-feature-history">
+        <div class="card-icon">📊</div>
+        <h3>Profile &amp; Workout History</h3>
+        <p>Persists user profiles and generated plan iterations in a lightweight, self-contained local SQLite database with SQLAlchemy.</p>
+      </article>
+
+      <article class="card card-amber" id="card-feature-nutrition">
+        <div class="card-icon">🥗</div>
+        <h3>Nutrition &amp; Recovery Tips</h3>
+        <p>Instant tailored recovery strategies, protein targets, and hydration advice keyed directly to your workout intensity.</p>
+      </article>
+
+      <article class="card card-purple" id="card-feature-admin">
+        <div class="card-icon">🛡️</div>
+        <h3>Admin Management</h3>
+        <p>Authenticated oversight panel for administrators to inspect registered users, plans, and generation metrics.</p>
+      </article>
+
+      <article class="card card-sky" id="card-feature-security">
+        <div class="card-icon">🔒</div>
+        <h3>Secure Local-First Stack</h3>
+        <p>Strict environment-based secret configuration, no client-side API keys, running strictly on <code>127.0.0.1</code>.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Live System Status Panel -->
+<section class="container" id="status">
+  <div class="health-panel">
+    <div class="section-header" style="text-align: left; margin-bottom: 1.5rem;">
+      <h2 class="section-title" style="font-size: 1.5rem;">Local Runtime Status</h2>
+      <p class="section-desc">Environment configurations and service health</p>
+    </div>
+
+    <div class="status-grid">
+      <div class="status-item" id="status-env">
+        <div class="status-label">Environment</div>
+        <div class="status-value">
+          <span class="pulse-dot"></span>
+          <span>{{ app_env | capitalize }}</span>
+        </div>
+      </div>
+
+      <div class="status-item" id="status-binding">
+        <div class="status-label">Server Binding</div>
+        <div class="status-value" style="color: #38bdf8;">127.0.0.1:8000</div>
+      </div>
+
+      <div class="status-item" id="status-database">
+        <div class="status-label">Storage Engine</div>
+        <div class="status-value" style="color: #34d399;">SQLite (fitbuddy.db)</div>
+      </div>
+
+      <div class="status-item" id="status-gemini">
+        <div class="status-label">Gemini AI Engine</div>
+        <div class="status-value">
+          {% if gemini_active %}
+            <span style="color: #34d399; font-weight: 600;">● Live Key Configured</span>
+          {% elif mock_enabled %}
+            <span style="color: #60a5fa; font-weight: 600;">⚙ Mock Dev Mode</span>
+          {% else %}
+            <span style="color: #fbbf24; font-weight: 600;">○ Key Missing in .env</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="status-item" id="status-model-workout">
+        <div class="status-label">Workout Model</div>
+        <div class="status-value" style="font-size: 0.95rem;"><code>{{ workout_model }}</code></div>
+      </div>
+
+      <div class="status-item" id="status-model-tip">
+        <div class="status-label">Tip &amp; Recovery Model</div>
+        <div class="status-value" style="font-size: 0.95rem;"><code>{{ tip_model }}</code></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

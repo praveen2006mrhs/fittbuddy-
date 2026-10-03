@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+
+{% block title %}{{ plan.plan_title }} — FitBuddy{% endblock %}
+
+{% block content %}
+<section class="plan-detail-section" style="padding: 2.5rem 0 4rem;">
+  <div class="container" style="max-width: 1040px;">
+    <!-- Navigation Back Link -->
+    <div style="margin-bottom: 1.5rem;">
+      <a href="/plans" style="color: var(--accent-primary); text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem;">
+        ← Back to My Workout Plans
+      </a>
+    </div>
+
+    <!-- Error Alerts (Preserved for retry) -->
+    {% if errors and errors|length > 0 %}
+      <div class="alert alert-error" id="plan-errors-alert" style="margin-bottom: 1.75rem;">
+        <div style="font-size: 1.25rem;">⚠️</div>
+        <div>
+          <strong>Unable to process revision:</strong>
+          <ul style="margin: 0.25rem 0 0 1rem; padding: 0;">
+            {% for err in errors %}
+              <li>{{ err }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Plan Header Card -->
+    <div class="card" style="padding: 2rem; margin-bottom: 2rem; position: relative; overflow: hidden;" id="plan-header-card">
+      <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%); pointer-events: none;"></div>
+
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
+            <span class="badge-pill" style="font-size: 0.8rem;">Plan v{{ version }}</span>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">
+              {{ created_at.strftime('%B %d, %Y') if created_at else 'Saved Plan' }}
+            </span>
+            <span style="font-size: 0.75rem; color: var(--text-dim); background: rgba(255,255,255,0.05); padding: 0.1rem 0.5rem; border-radius: var(--radius-full);">
+              {{ model_identifier }}
+            </span>
+          </div>
+          <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem; letter-spacing: -0.02em;">
+            {{ plan.plan_title }}
+          </h1>
+          <p style="font-size: 1.05rem; color: var(--text-muted); max-width: 760px; line-height: 1.6;">
+            {{ plan.summary }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Bar -->
+      <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem; margin-top: 1rem; font-size: 0.875rem;">
+        <div>🎯 <span style="color: var(--text-muted);">Target Goal:</span> <strong style="color: var(--text-main);">{{ plan.goal.replace('_', ' ').title() if plan.goal else 'General Fitness' }}</strong></div>
+        <div>📅 <span style="color: var(--text-muted);">Schedule:</span> <strong style="color: var(--text-main);">Exactly 7 Days (Ordered)</strong></div>
+        {% if profile_snapshot and profile_snapshot.equipment %}
+          <div>🏋️ <span style="color: var(--text-muted);">Equipment:</span> <strong style="color: var(--text-main);">{{ profile_snapshot.equipment.replace('_', ' ').title() }}</strong></div>
+        {% endif %}
+        {% if profile_snapshot and profile_snapshot.available_minutes %}
+          <div>⏱️ <span style="color: var(--text-muted);">Max Session:</span> <strong style="color: var(--text-main);">{{ profile_snapshot.available_minutes }} minutes</strong></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Medical & Scope Notice Banner -->
+    <div class="scope-notice-card" id="detail-medical-notice" style="margin-bottom: 2rem;">
+      <div class="scope-icon">🩺</div>
+      <div class="scope-text">
+        <strong>Important Safety Notice &amp; Medical Disclaimer</strong>
+        <p>This plan was synthesized using automated Gemini AI formatting calibrated to your profile parameters. <em>Automated schema validation does not establish medical safety or physical clearance.</em> Consult a physician before undertaking strenuous exercise, and stop immediately if you feel sharp pain or dizziness.</p>
+      </div>
+    </div>
+
+    <!-- Version History Lineage Card -->
+    {% if version_history and version_history|length > 0 %}
+      <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;" id="version-history-card">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+          <div>
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              <span>📜</span> Version History &amp; Revision Lineage
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0;">
+              Browse all versions of this routine and see how feedback shaped your training.
+            </p>
+          </div>
+          <span class="badge-pill" style="font-size: 0.8rem;">
+            {{ version_history|length }} Version{{ 's' if version_history|length != 1 else '' }} in Lineage
+          </span>
+        </div>
+
+        <!-- AI Change Summary Disclaimer Banner -->
+        <div class="scope-notice-card" style="margin-bottom: 1.25rem; background: rgba(234, 179, 8, 0.08); border-color: rgba(234, 179, 8, 0.35);" id="change-summary-disclaimer">
+          <div class="scope-icon" style="color: #facc15;">⚠️</div>
+          <div class="scope-text" style="color: var(--text-muted);">
+            <strong style="color: #fde047;">AI Change Summary Notice</strong>
+            <p style="margin: 0.2rem 0 0; font-size: 0.85rem; line-height: 1.5;">
+              The change summary for each revision is generated text produced by Gemini AI to describe requested adjustments. <em>This is generated text, not a verified exhaustive comparison.</em> Always review the full 7-day schedule before starting your workout.
+            </p>
+          </div>
+        </div>
+
+        <!-- Versions Timeline -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;" id="version-timeline-list">
+          {% for item in version_history %}
+            <div style="padding: 1rem 1.25rem; border-radius: var(--radius-sm); border: 1px solid {{ 'rgba(16, 185, 129, 0.45)' if item.is_current else 'var(--border-subtle)' }}; background: {{ 'rgba(16, 185, 129, 0.05)' if item.is_current else 'rgba(255, 255, 255, 0.02)' }};" id="version-item-{{ item.version }}">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  <span class="badge-pill" style="font-size: 0.8rem; font-weight: 700; {{ 'background: rgba(16, 185, 129, 0.25); border-color: #34d399; color: #34d399;' if item.is_current else '' }}">
+                    Version {{ item.version }}
+                  </span>
+                  <span style="font-size: 0.8rem; color: var(--text-dim);">
+                    {{ item.created_at.strftime('%B %d, %Y • %H:%M UTC') if item.created_at else 'Saved Plan' }}
+                  </span>
+                  {% if item.is_current %}
+                    <span style="font-size: 0.75rem; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.15rem 0.5rem; border-radius: var(--radius-full); font-weight: 700;">
+                      Currently Viewing
+                    </span>
+                  {% endif %}
+                </div>
+
+                {% if not item.is_current %}
+                  <a href="/plans/{{ item.plan_id }}" class="btn btn-sm btn-outline" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+                    Switch to v{{ item.version }} →
+                  </a>
+                {% endif %}
+              </div>
+
+              {% if item.feedback %}
+                <div style="font-size: 0.875rem; margin-bottom: 0.4rem; color: #38bdf8;">
+                  <strong>User Feedback:</strong> “{{ item.feedback }}”
+                </div>
+              {% else %}
+                <div style="font-size: 0.85rem; margin-bottom: 0.4rem; color: var(--text-dim); font-style: italic;">
+                  Initial version generated from fitness profile snapshot.
+                </div>
+              {% endif %}
+
+              <div style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; background: rgba(0, 0, 0, 0.2); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); border-left: 3px solid {{ 'var(--accent-primary)' if item.is_current else 'var(--border-subtle)' }};">
+                <strong style="color: var(--text-main);">AI Change Summary:</strong> {{ item.change_summary }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Revision Feedback Submission Card -->
+    <div class="card" style="padding: 1.75rem; margin-bottom: 2.5rem; border: 1px solid rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.03);" id="revise-plan-card">
+      <div style="margin-bottom: 1.25rem;">
+        <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0 0 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔄</span> Revise This Workout Plan
+        </h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0; line-height: 1.5;">
+          Need more rest days, higher cardio emphasis, or shorter sessions? Enter your feedback below to generate a new version while keeping your current plan accessible.
+        </p>
+      </div>
+
+      <!-- Scope Notice: Feedback affects only this plan -->
+      <div style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: var(--radius-sm); padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: #38bdf8; display: flex; align-items: flex-start; gap: 0.6rem;">
+        <span style="font-size: 1.1rem; line-height: 1;">💡</span>
+        <div>
+          <strong>Plan-Specific Adjustment:</strong> Your feedback customizes this 7-day routine and creates a new version (e.g. v{{ version + 1 }}). It does not alter your saved profile settings. To update your ongoing baseline metrics (weight, general equipment, default session duration), visit your <a href="/profile" style="color: #38bdf8; text-decoration: underline; font-weight: 600;">Profile Settings</a>.
+        </div>
+      </div>
+
+      <!-- Quick Feedback Suggestion Chips -->
+      <div style="margin-bottom: 1rem;">
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+          Quick Suggestions (Click to fill):
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="feedback-chips">
+          <button type="button" class="btn btn-sm btn-outline feedback-chip" data-text="Add more rest days" style="border-radius: var(--radius-full); font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+            🌿 Add more rest days
+          </button>
+          <button type="button" class="btn btn-sm btn-outline feedback-chip" data-text="More focus on cardio" style="border-radius: var(--radius-full); font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+            🏃 More focus on cardio
+          </button>
+          <button type="button" class="btn btn-sm btn-outline feedback-chip" data-text="I only have 20 minutes" style="border-radius: var(--radius-full); font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+            ⏱️ I only have 20 minutes
+          </button>
+          <button type="button" class="btn btn-sm btn-outline feedback-chip" data-text="Include more upper body chest and back exercises" style="border-radius: var(--radius-full); font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+            💪 More upper body focus
+          </button>
+        </div>
+      </div>
+
+      <form action="/plans/{{ plan_id }}/revise" method="POST" id="plan-revision-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="feedback-input" class="form-label" style="font-weight: 600;">
+            Your Revision Feedback <span style="color: var(--accent-primary); font-weight: normal;">(5 to 1000 characters)</span>
+          </label>
+          <textarea
+            name="feedback_text"
+            id="feedback-input"
+            class="form-control"
+            rows="3"
+            minlength="5"
+            maxlength="1000"
+            required
+            placeholder="e.g., Include more rest days, more focus on cardio, or I only have 20 minutes..."
+            style="resize: vertical; font-size: 0.95rem; line-height: 1.5;"
+          >{{ feedback_text if feedback_text else '' }}</textarea>
+          <span class="form-hint" style="font-size: 0.775rem; color: var(--text-dim);">
+            Feedback is treated strictly as routine adjustments and formatted according to safe structured output standards.
+          </span>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <button type="submit" id="revision-submit-btn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; padding: 0.75rem 1.5rem;">
+            <span id="btn-text">⚡ Generate Revised Version</span>
+            <span id="btn-spinner" style="display: none;">⏳ Revising Plan...</span>
+          </button>
+          <span style="font-size: 0.8rem; color: var(--text-dim);">
+            Current Version {{ version }} will remain preserved and accessible.
+          </span>
+        </div>
+      </form>
+    </div>
+
+    <!-- General Guidance Card -->
+    {% if plan.general_guidance or plan.safety_guidelines %}
+      {% set guidance_list = plan.general_guidance if plan.general_guidance else plan.safety_guidelines %}
+      <div class="card" style="padding: 1.5rem; margin-bottom: 2.5rem; background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.2);" id="general-guidance-card">
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: #34d399; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🛡️</span> General Guidance, Progression &amp; Safety
+        </h3>
+        <ul style="padding-left: 1.25rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.4rem;">
+          {% for guide in guidance_list %}
+            <li>{{ guide }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- 7-Day Schedule Section -->
+    <div class="section-header" style="text-align: left; margin-bottom: 1.5rem;">
+      <h2 class="section-title" style="font-size: 1.5rem;">7-Day Structured Schedule</h2>
+      <p class="section-desc">Follow each day in sequence with dedicated warm-ups, exercises, and cool-downs.</p>
+    </div>
+
+    <div class="days-container" style="display: flex; flex-direction: column; gap: 1.75rem;" id="days-schedule-list">
+      {% for day in days %}
+        <div class="card day-card" id="day-card-{{ day.day_number }}" style="padding: 1.75rem; border: 1px solid var(--border-subtle);">
+          <!-- Day Header -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="badge-pill" style="font-size: 0.85rem; padding: 0.25rem 0.75rem; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35);">
+                Day {{ day.day_number }}
+              </span>
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin: 0;">
+                {{ day.label if day.label else day.day_name }}
+              </h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              {% if day.is_rest_day or 'rest' in day.activity_type|lower or 'recovery' in day.activity_type|lower %}
+                <span style="font-size: 0.8rem; background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-weight: 600;">
+                  🌿 Active Recovery / Rest
+                </span>
+              {% else %}
+                <span style="font-size: 0.8rem; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.2rem 0.6rem; border-radius: var(--radius-full); font-weight: 600;">
+                  {{ day.activity_type }}
+                </span>
+              {% endif %}
+              <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
+                ⏱️ {{ day.estimated_duration }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Day Focus -->
+          <div style="font-size: 0.95rem; margin-bottom: 1.25rem; color: var(--text-main);">
+            <strong style="color: var(--accent-secondary);">Focus:</strong> {{ day.focus }}
+          </div>
+
+          <!-- Warm-up Block -->
+          <div style="background: rgba(0, 0, 0, 0.2); border-left: 3px solid var(--accent-secondary); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.875rem;">
+            <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.25rem;">
+              🔥 Dynamic Warm-Up
+            </div>
+            <div style="color: var(--text-muted);">
+              {{ day.warmup if day.warmup else day.warmup_notes }}
+            </div>
+          </div>
+
+          <!-- Exercises Prescription -->
+          {% if day.exercises and day.exercises|length > 0 %}
+            <div style="margin-bottom: 1.25rem;">
+              <h4 style="font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 0.75rem;">
+                Prescribed Movements
+              </h4>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for ex in day.exercises %}
+                  <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.9rem 1.1rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                      <strong style="font-size: 1rem; color: var(--text-main);">{{ ex.name }}</strong>
+                      <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.825rem;">
+                        {% if ex.sets %}
+                          <span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); font-weight: 600;">
+                            {{ ex.sets }} sets
+                          </span>
+                        {% endif %}
+                        {% if ex.reps_or_duration %}
+                          <span style="background: rgba(255, 255, 255, 0.06); color: var(--text-main); padding: 0.15rem 0.5rem; border-radius: var(--radius-sm);">
+                            {{ ex.reps_or_duration }}
+                          </span>
+                        {% endif %}
+                        {% if ex.rest_interval %}
+                          <span style="color: var(--text-dim);">
+                            Rest: {{ ex.rest_interval }}
+                          </span>
+                        {% elif ex.rest_seconds is defined and ex.rest_seconds is not none %}
+                          <span style="color: var(--text-dim);">
+                            Rest: {{ ex.rest_seconds }}s
+                          </span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    {% if ex.instructions %}
+                      <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.45;">
+                        <span style="color: var(--text-dim);">Form Cues:</span> {{ ex.instructions }}
+                      </p>
+                    {% elif ex.form_cues and ex.form_cues|length > 0 %}
+                      <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.45;">
+                        <span style="color: var(--text-dim);">Form Cues:</span> {{ ex.form_cues | join(' • ') }}
+                      </p>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <!-- Pure Rest Day without exercises -->
+            <div style="background: rgba(6, 182, 212, 0.05); border: 1px dashed rgba(6, 182, 212, 0.25); border-radius: var(--radius-sm); padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
+              <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🛌</div>
+              <strong style="color: #38bdf8; font-size: 0.95rem;">Designated Rest &amp; Physical Regeneration</strong>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.25rem 0 0;">
+                No heavy working sets scheduled. Let muscle fibers repair, replenish glycogen stores, and engage in gentle stretching or casual walking.
+              </p>
+            </div>
+          {% endif %}
+
+          <!-- Cool-down Block -->
+          <div style="background: rgba(0, 0, 0, 0.2); border-left: 3px solid var(--accent-primary); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem; font-size: 0.875rem;">
+            <div style="font-weight: 700; color: #34d399; margin-bottom: 0.25rem;">
+              🧘 Cool-Down &amp; Mobility
+            </div>
+            <div style="color: var(--text-muted);">
+              {{ day.cooldown if day.cooldown else day.cooldown_notes }}
+            </div>
+          </div>
+
+          <!-- Recovery Notes -->
+          {% if day.recovery_notes %}
+            <div style="font-size: 0.85rem; color: var(--text-dim); border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+              💡 <strong>Daily Recovery Guidance:</strong> {{ day.recovery_notes }}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Profile Snapshot Metadata Accordion -->
+    {% if profile_snapshot %}
+      <div class="card" style="margin-top: 2.5rem; padding: 1.5rem;" id="snapshot-metadata-card">
+        <details>
+          <summary style="font-size: 0.9rem; font-weight: 700; color: var(--text-dim); cursor: pointer;">
+            ⚙️ View Profile Parameters Snapshot Used for Generation
+          </summary>
+          <div style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+            <div>Age: <strong style="color: var(--text-main);">{{ profile_snapshot.age }} yrs</strong></div>
+            <div>Weight: <strong style="color: var(--text-main);">{{ profile_snapshot.weight_kg }} kg</strong></div>
+            <div>Goal: <strong style="color: var(--text-main);">{{ profile_snapshot.fitness_goal }}</strong></div>
+            <div>Intensity: <strong style="color: var(--text-main);">{{ profile_snapshot.workout_intensity }}</strong></div>
+            <div>Experience: <strong style="color: var(--text-main);">{{ profile_snapshot.experience_level }}</strong></div>
+            <div>Equipment: <strong style="color: var(--text-main);">{{ profile_snapshot.equipment }}</strong></div>
+            <div>Target Duration: <strong style="color: var(--text-main);">{{ profile_snapshot.available_minutes }} mins</strong></div>
+            {% if profile_snapshot.exercise_limitations %}
+              <div style="grid-column: 1 / -1;">Limitations: <strong style="color: var(--text-main);">{{ profile_snapshot.exercise_limitations }}</strong></div>
+            {% endif %}
+          </div>
+        </details>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Quick suggestion chips
+    const chips = document.querySelectorAll('.feedback-chip');
+    const feedbackInput = document.getElementById('feedback-input');
+    chips.forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        const text = chip.getAttribute('data-text');
+        if (feedbackInput) {
+          feedbackInput.value = text;
+          feedbackInput.focus();
+        }
+      });
+    });
+
+    // Debounce & double-submission prevention
+    const form = document.getElementById('plan-revision-form');
+    const submitBtn = document.getElementById('revision-submit-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+
+    if (form && submitBtn) {
+      form.addEventListener('submit', function(e) {
+        if (submitBtn.disabled) {
+          e.preventDefault();
+          return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.75';
+        submitBtn.style.cursor = 'not-allowed';
+        if (btnText && btnSpinner) {
+          btnText.style.display = 'none';
+          btnSpinner.style.display = 'inline';
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

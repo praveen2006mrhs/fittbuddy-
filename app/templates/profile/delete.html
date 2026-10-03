@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Account — FitBuddy{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card" style="border-color: rgba(239, 68, 68, 0.4);" id="delete-card">
+    <div class="auth-header">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); margin: 0 auto 1rem;">⚠️</div>
+      <h1 class="auth-title" style="color: #f87171;">Delete Account</h1>
+      <p class="auth-subtitle">
+        This action is permanent and cannot be undone. All your profile data, generated workout routines, feedback history, and active sessions will be permanently purged.
+      </p>
+    </div>
+
+    <form action="/profile/delete" method="POST" class="auth-form" id="delete-account-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div class="form-group">
+        <label for="confirmation_text" class="form-label" style="color: #fca5a5;">
+          Type <strong style="color: #ffffff;">DELETE</strong> to confirm *
+        </label>
+        <input 
+          type="text" 
+          id="confirmation_text" 
+          name="confirmation_text" 
+          class="form-control" 
+          placeholder="DELETE" 
+          required 
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Confirm Your Current Password *</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-control" 
+          placeholder="Enter current password" 
+          required 
+          autocomplete="current-password"
+        >
+      </div>
+
+      <div class="form-actions" style="margin-top: 1.75rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <button type="submit" class="btn btn-danger btn-block" id="btn-confirm-delete">
+          Permanently Delete My Account
+        </button>
+        <a href="/profile" class="btn btn-outline btn-block" id="btn-cancel-delete" style="text-align: center;">
+          Cancel &amp; Return to Profile
+        </a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

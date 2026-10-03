@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
+
+  <!-- Admin Header -->
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+        <span class="badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);">
+          🛡️ Administrator Portal
+        </span>
+        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+          Read-Only Mode
+        </span>
+      </div>
+      <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em;">Platform Administration</h1>
+      <p style="color: var(--text-muted); font-size: 1rem;">
+        Live platform telemetry, user account inspection, workout plan revisions, and Gemini model telemetry.
+      </p>
+    </div>
+  </div>
+
+  <!-- Real-time Database Counts (4 Stat Cards) -->
+  <div class="admin-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+    <!-- Stat 1: Total Users -->
+    <div class="card stat-card" id="stat-total-users" style="padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Registered Users</span>
+        <span style="font-size: 1.5rem;">👥</span>
+      </div>
+      <div class="stat-number" style="font-size: 2.4rem; font-weight: 800; color: var(--text-main);" id="count-users">
+        {{ stats.users }}
+      </div>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Active database accounts</p>
+    </div>
+
+    <!-- Stat 2: Total Workout Plans -->
+    <div class="card stat-card" id="stat-total-plans" style="padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Workout Plans</span>
+        <span style="font-size: 1.5rem;">📋</span>
+      </div>
+      <div class="stat-number" style="font-size: 2.4rem; font-weight: 800; color: var(--accent-primary);" id="count-plans">
+        {{ stats.plans }}
+      </div>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Initial &amp; revised 7-day plans</p>
+    </div>
+
+    <!-- Stat 3: Total Plan Revisions -->
+    <div class="card stat-card" id="stat-total-revisions" style="padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Plan Revisions</span>
+        <span style="font-size: 1.5rem;">🔄</span>
+      </div>
+      <div class="stat-number" style="font-size: 2.4rem; font-weight: 800; color: #38bdf8;" id="count-revisions">
+        {{ stats.revisions }}
+      </div>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Feedback-driven adaptations</p>
+    </div>
+
+    <!-- Stat 4: Total Generated Tips -->
+    <div class="card stat-card" id="stat-total-tips" style="padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Wellness Tips</span>
+        <span style="font-size: 1.5rem;">💡</span>
+      </div>
+      <div class="stat-number" style="font-size: 2.4rem; font-weight: 800; color: #fbbf24;" id="count-tips">
+        {{ stats.tips }}
+      </div>
+      <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem;">Nutrition &amp; recovery tips</p>
+    </div>
+  </div>
+
+  <!-- Search & User Directory Section -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); margin-bottom: 2.5rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700;">User Accounts Directory</h2>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">
+          Search and inspect registered users, fitness profiles, and generated plan histories.
+        </p>
+      </div>
+
+      <!-- Search Form -->
+      <form method="GET" action="/admin" style="display: flex; gap: 0.5rem; align-items: center; max-width: 400px; width: 100%;">
+        <div style="position: relative; width: 100%;">
+          <input 
+            type="text" 
+            name="q" 
+            id="admin-search-input"
+            value="{{ q }}" 
+            placeholder="Search email or display name..." 
+            class="form-control"
+            style="width: 100%; padding: 0.6rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-main);"
+          >
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm" id="btn-search-users" style="padding: 0.6rem 1.2rem; white-space: nowrap;">
+          Search
+        </button>
+        {% if q %}
+          <a href="/admin" class="btn btn-outline btn-sm" id="btn-clear-search" style="padding: 0.6rem 1rem;">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Active Filter Notice -->
+    {% if q %}
+      <div style="padding: 0.6rem 1rem; background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8; border-radius: 4px; margin-bottom: 1.25rem; font-size: 0.875rem;">
+        Showing search results for: <strong>"{{ q }}"</strong> ({{ total_matching }} matching)
+      </div>
+    {% endif %}
+
+    <!-- Users Table -->
+    {% if users %}
+      <div style="overflow-x: auto;">
+        <table class="table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;" id="admin-users-table">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+              <th style="padding: 0.75rem 1rem;">ID</th>
+              <th style="padding: 0.75rem 1rem;">Account / Email</th>
+              <th style="padding: 0.75rem 1rem;">Role</th>
+              <th style="padding: 0.75rem 1rem;">Display Name</th>
+              <th style="padding: 0.75rem 1rem;">Fitness Goal</th>
+              <th style="padding: 0.75rem 1rem; text-align: center;">Plans</th>
+              <th style="padding: 0.75rem 1rem;">Registered</th>
+              <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); transition: background var(--transition-fast);">
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-family: monospace;">#{{ u.id }}</td>
+                <td style="padding: 0.85rem 1rem; font-weight: 600; color: var(--text-main);">{{ u.email }}</td>
+                <td style="padding: 0.85rem 1rem;">
+                  {% if u.role == 'admin' %}
+                    <span class="badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); font-size: 0.75rem;">Admin</span>
+                  {% else %}
+                    <span class="badge" style="background: rgba(148, 163, 184, 0.12); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.2); font-size: 0.75rem;">User</span>
+                  {% endif %}
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-muted);">{{ u.display_name }}</td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-muted);">{{ u.fitness_goal }}</td>
+                <td style="padding: 0.85rem 1rem; text-align: center;">
+                  <span style="font-weight: 700; color: var(--accent-primary);">{{ u.plans_count }}</span>
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-size: 0.8rem;">{{ u.created_at }}</td>
+                <td style="padding: 0.85rem 1rem; text-align: right;">
+                  <a href="/admin/users/{{ u.id }}" class="btn btn-sm btn-outline" id="btn-inspect-user-{{ u.id }}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                    Inspect User &rarr;
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+        <span style="color: var(--text-dim); font-size: 0.85rem;">
+          Showing page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong> ({{ total_matching }} total users)
+        </span>
+        <div style="display: flex; gap: 0.5rem;">
+          {% if has_prev %}
+            <a href="/admin?page={{ prev_page }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm btn-outline" id="btn-prev-page">
+              &larr; Previous
+            </a>
+          {% else %}
+            <button class="btn btn-sm btn-outline" disabled style="opacity: 0.4; cursor: not-allowed;">
+              &larr; Previous
+            </button>
+          {% endif %}
+
+          {% if has_next %}
+            <a href="/admin?page={{ next_page }}{% if q %}&q={{ q }}{% endif %}" class="btn btn-sm btn-outline" id="btn-next-page">
+              Next &rarr;
+            </a>
+          {% else %}
+            <button class="btn btn-sm btn-outline" disabled style="opacity: 0.4; cursor: not-allowed;">
+              Next &rarr;
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No user accounts found matching your query.</p>
+        {% if q %}
+          <a href="/admin" class="btn btn-outline btn-sm">Clear Search Filter</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Recent Workout Plans Across System -->
+  <div class="card" style="padding: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700;">Recent Workout Plan Generations</h2>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">
+          Cross-user audit trail showing model versions and simulation vs live execution.
+        </p>
+      </div>
+    </div>
+
+    {% if recent_plans %}
+      <div style="overflow-x: auto;">
+        <table class="table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;" id="admin-recent-plans-table">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+              <th style="padding: 0.75rem 1rem;">Plan ID</th>
+              <th style="padding: 0.75rem 1rem;">Owner Email</th>
+              <th style="padding: 0.75rem 1rem;">Plan Title</th>
+              <th style="padding: 0.75rem 1rem;">Version</th>
+              <th style="padding: 0.75rem 1rem;">Model / Generation Mode</th>
+              <th style="padding: 0.75rem 1rem;">Created At</th>
+              <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_plans %}
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);">
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-family: monospace;">#{{ p.id }}</td>
+                <td style="padding: 0.85rem 1rem; font-weight: 500;">{{ p.owner_email }}</td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-main); font-weight: 600;">{{ p.title }}</td>
+                <td style="padding: 0.85rem 1rem;">
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-primary); border: 1px solid rgba(16, 185, 129, 0.25);">
+                    v{{ p.version }}
+                  </span>
+                </td>
+                <td style="padding: 0.85rem 1rem;">
+                  {% if p.is_mock %}
+                    <span class="badge" style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">
+                      ⚙️ Mock Simulation ({{ p.model_identifier }})
+                    </span>
+                  {% else %}
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                      ⚡ Live AI ({{ p.model_identifier }})
+                    </span>
+                  {% endif %}
+                </td>
+                <td style="padding: 0.85rem 1rem; color: var(--text-dim); font-size: 0.8rem;">{{ p.created_at }}</td>
+                <td style="padding: 0.85rem 1rem; text-align: right;">
+                  <a href="/admin/plans/{{ p.id }}" class="btn btn-sm btn-outline" id="btn-inspect-plan-{{ p.id }}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                    Inspect Plan &rarr;
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color: var(--text-dim); font-style: italic; text-align: center; padding: 2rem 0;">
+        No workout plans have been generated yet.
+      </p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

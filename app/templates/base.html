@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FitBuddy — AI-Powered Workout &amp; Fitness Companion{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}FitBuddy creates intelligent, personalized 7-day workout routines and nutrition guidance tailored to your goals and equipment.{% endblock %}">
+  
+  <!-- Modern Typography (Plus Jakarta Sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <!-- Ambient Multi-Color Background Glow Orbs -->
+  <div class="ambient-glow-layer" aria-hidden="true">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+  </div>
+
+  <!-- Header & Navigation -->
+  <header class="navbar" id="main-header">
+    <div class="container nav-container">
+      <a href="/" class="brand-logo" id="nav-brand-logo">
+        <div class="brand-icon">⚡</div>
+        <span>FitBuddy</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links" id="nav-menu-list">
+          <li><a href="/" id="nav-link-home">Home</a></li>
+          <li><a href="/#features" id="nav-link-features">Features</a></li>
+          {% if user %}
+            <li><a href="/plans" id="nav-link-plans" class="nav-highlight">Workout Plans</a></li>
+            <li><a href="/tips" id="nav-link-tips">Daily Tips</a></li>
+            <li><a href="/profile" id="nav-link-profile">My Profile</a></li>
+            {% if user.role == 'admin' %}
+              <li><a href="/admin" id="nav-link-admin" style="color: #c084fc; font-weight: 600;">Admin Dashboard</a></li>
+            {% endif %}
+          {% endif %}
+          <li><a href="/health" target="_blank" id="nav-link-health">API Health</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-auth-actions" id="nav-auth-block">
+        {% if user %}
+          <div class="user-pill" id="user-badge">
+            <span class="user-role-dot" {% if user.role == 'admin' %}style="background: #c084fc; box-shadow: 0 0 8px #c084fc;"{% endif %}></span>
+            <span class="user-email-text">{{ user.email }}</span>
+            {% if user.role == 'admin' %}
+              <span style="font-size: 0.7rem; font-weight: 700; background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); padding: 0.1rem 0.4rem; border-radius: 9999px; margin-left: 0.25rem;" id="nav-admin-badge">Admin</span>
+            {% endif %}
+          </div>
+          <form action="/logout" method="POST" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-sm btn-outline" id="btn-logout">Logout</button>
+          </form>
+        {% else %}
+          <a href="/login" class="btn btn-sm btn-outline" id="btn-login-link">Log In</a>
+          <a href="/register" class="btn btn-sm btn-primary" id="btn-register-link">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash/Notification Container -->
+  <div class="container" style="margin-top: 1.5rem;">
+    {% if errors %}
+      <div class="alert alert-error" id="global-alert-error" role="alert">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <strong>Please correct the following:</strong>
+          <ul>
+            {% for err in errors %}
+              <li>{{ err }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if success_message %}
+      <div class="alert alert-success" id="global-alert-success" role="status">
+        <div class="alert-icon">✓</div>
+        <div class="alert-content">
+          <p>{{ success_message }}</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Main Content Area -->
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" id="main-footer">
+    <div class="container footer-content">
+      <p>&copy; 2026 FitBuddy. Built with FastAPI, SQLAlchemy &amp; Google GenAI.</p>
+      <p>Adult MVP (18+) • Single-App Local Architecture</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/static/js/app.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
