@@ -50,20 +50,25 @@ def create_app() -> FastAPI:
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+    from urllib.parse import parse_qsl, urlencode
+
     @app.middleware("http")
     async def vercel_url_rewrite_middleware(request: Request, call_next):
-        headers = request.headers
-        matched_path = headers.get("x-matched-path")
-        if matched_path:
-            request.scope["path"] = matched_path
+        qs = request.scope.get("query_string", b"").decode("utf-8", errors="ignore")
+        if "__path__" in qs:
+            params = dict(parse_qsl(qs))
+            raw_target = params.pop("__path__", "/")
+            norm_target = "/" + raw_target.lstrip("/")
+            request.scope["path"] = norm_target
+            request.scope["query_string"] = urlencode(params).encode("ascii")
         else:
             path = request.scope.get("path", "")
             if path in ("/api/index.py", "/api/index", "/api/index.py/"):
                 request.scope["path"] = "/"
             elif path.startswith("/api/index.py/"):
-                request.scope["path"] = path[len("/api/index.py"):]
+                request.scope["path"] = "/" + path[len("/api/index.py"):].lstrip("/")
             elif path.startswith("/api/index/"):
-                request.scope["path"] = path[len("/api/index"):]
+                request.scope["path"] = "/" + path[len("/api/index"):].lstrip("/")
         return await call_next(request)
 
     # Global exception handler to capture and log any unhandled runtime crashes

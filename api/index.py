@@ -21,18 +21,22 @@ class VercelPathRewriteMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope.get("type") == "http":
-            headers = dict(scope.get("headers", []))
-            matched_path = headers.get(b"x-matched-path", b"").decode("utf-8", errors="ignore")
-            if matched_path:
-                scope["path"] = matched_path
+            from urllib.parse import parse_qsl, urlencode
+            qs = scope.get("query_string", b"").decode("utf-8", errors="ignore")
+            if "__path__" in qs:
+                params = dict(parse_qsl(qs))
+                raw_target = params.pop("__path__", "/")
+                norm_target = "/" + raw_target.lstrip("/")
+                scope["path"] = norm_target
+                scope["query_string"] = urlencode(params).encode("ascii")
             else:
                 path = scope.get("path", "")
-                if path in ("/api/index.py", "/api/index"):
+                if path in ("/api/index.py", "/api/index", "/api/index.py/"):
                     scope["path"] = "/"
                 elif path.startswith("/api/index.py/"):
-                    scope["path"] = path[len("/api/index.py"):]
+                    scope["path"] = "/" + path[len("/api/index.py"):].lstrip("/")
                 elif path.startswith("/api/index/"):
-                    scope["path"] = path[len("/api/index"):]
+                    scope["path"] = "/" + path[len("/api/index"):].lstrip("/")
         await self.asgi_app(scope, receive, send)
 
 
