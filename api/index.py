@@ -12,8 +12,33 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+
+class VercelPathRewriteMiddleware:
+    """Corrects URL path routing when Vercel rewrites requests to /api/index.py."""
+
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") == "http":
+            headers = dict(scope.get("headers", []))
+            matched_path = headers.get(b"x-matched-path", b"").decode("utf-8", errors="ignore")
+            if matched_path:
+                scope["path"] = matched_path
+            else:
+                path = scope.get("path", "")
+                if path in ("/api/index.py", "/api/index"):
+                    scope["path"] = "/"
+                elif path.startswith("/api/index.py/"):
+                    scope["path"] = path[len("/api/index.py"):]
+                elif path.startswith("/api/index/"):
+                    scope["path"] = path[len("/api/index"):]
+        await self.asgi_app(scope, receive, send)
+
+
 try:
-    from app.main import app
+    from app.main import app as _base_app
+    app = VercelPathRewriteMiddleware(_base_app)
     handler = app
 except Exception as e:
     import traceback
@@ -44,4 +69,3 @@ except Exception as e:
 
     app = fallback_app
     handler = fallback_app
-
