@@ -50,6 +50,22 @@ def create_app() -> FastAPI:
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+    @app.middleware("http")
+    async def vercel_url_rewrite_middleware(request: Request, call_next):
+        headers = request.headers
+        matched_path = headers.get("x-matched-path")
+        if matched_path:
+            request.scope["path"] = matched_path
+        else:
+            path = request.scope.get("path", "")
+            if path in ("/api/index.py", "/api/index", "/api/index.py/"):
+                request.scope["path"] = "/"
+            elif path.startswith("/api/index.py/"):
+                request.scope["path"] = path[len("/api/index.py"):]
+            elif path.startswith("/api/index/"):
+                request.scope["path"] = path[len("/api/index"):]
+        return await call_next(request)
+
     # Global exception handler to capture and log any unhandled runtime crashes
     from starlette.exceptions import HTTPException as StarletteHTTPException
     from fastapi.exception_handlers import http_exception_handler
