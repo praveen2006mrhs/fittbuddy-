@@ -18,7 +18,7 @@ is_serverless = bool(
     or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
     or not os.access(".", os.W_OK)
 )
-if is_serverless and db_url.startswith("sqlite:///."):
+if is_serverless and db_url.startswith("sqlite") and not db_url.startswith("sqlite:////tmp") and not db_url.startswith("sqlite:///:memory:"):
     db_url = "sqlite:////tmp/fitbuddy.db"
 
 
