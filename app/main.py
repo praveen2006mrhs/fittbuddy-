@@ -50,6 +50,31 @@ def create_app() -> FastAPI:
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+    # Global exception handler to capture and log any unhandled runtime crashes
+    from starlette.exceptions import HTTPException as StarletteHTTPException
+    from fastapi.exception_handlers import http_exception_handler
+    from fastapi.responses import JSONResponse, HTMLResponse
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        if isinstance(exc, StarletteHTTPException):
+            return await http_exception_handler(request, exc)
+        import traceback
+        tb = traceback.format_exc()
+        print(f"[FitBuddy Critical Error] {request.method} {request.url.path}: {exc}\n{tb}", flush=True)
+        if request.url.path.startswith("/api/"):
+            return JSONResponse(status_code=500, content={"error": "Internal Server Error", "detail": str(exc)})
+        return HTMLResponse(
+            status_code=500,
+            content=(
+                f"<!DOCTYPE html><html><body style='font-family:sans-serif;padding:2rem;background:#0f172a;color:#f8fafc;'>"
+                f"<h2>FitBuddy Server Error</h2>"
+                f"<p style='color:#f87171;'>{str(exc)}</p>"
+                f"<pre style='background:#1e293b;padding:1rem;border-radius:8px;overflow:auto;'>{tb}</pre>"
+                f"</body></html>"
+            ),
+        )
+
     # Include route modules
     app.include_router(health_router)
     app.include_router(auth_router)
@@ -63,3 +88,4 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
